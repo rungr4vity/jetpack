@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "731825723434",
+    "project_id": "feature-1f78f",
+    "storage_bucket": "feature-1f78f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:731825723434:android:725609eff80359f9fa0b53",
+        "android_client_info": {
+          "package_name": "com.example.jetpack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzOwI-V0wNW0htW86y9ZCD2QKBikJP3Ys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
