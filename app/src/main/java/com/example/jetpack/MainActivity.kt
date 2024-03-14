@@ -1,98 +1,84 @@
 package com.example.jetpack
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.example.jetpack.ui.theme.JetpackTheme
-
-//ComponentActivity
-
-//old
-//AppCompatActivity
+import androidx.fragment.app.FragmentActivity
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            JetpackTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Greeting("welcome to my jetpack")
-                }
-            }
+            BiometricAuthenticationScreen()
         }
     }
-
-
-
-
-   private var canAuthenticate = false
-   private lateinit var promptInfo: BiometricPrompt.PromptInfo
-   fun setupAuth() {
-       if(androidx.biometric.BiometricManager.from(this).canAuthenticate(
-               androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                       androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL) == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS) {
-
-               canAuthenticate = true
-               promptInfo = BiometricPrompt.PromptInfo.Builder()
-                   .setTitle("Auth biométrica")
-                   .setSubtitle("Autenticate utilizando el sensor biométrico")
-                   .setAllowedAuthenticators(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                   androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL)
-                   .build()
-
-       }
-   }
-
-
-   fun authenticate(auth: (auth: Boolean) -> Unit) {
-       if (canAuthenticate) {
-           BiometricPrompt(this, ContextCompat.getMainExecutor(this),
-               object : BiometricPrompt.AuthenticationCallback() {
-
-                   override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                       super.onAuthenticationSucceeded(result)
-
-                       auth(true)
-                   }
-           }).authenticate(promptInfo)
-       } else {
-           auth(true)
-       }
-   }
-
-
-
-
-
-
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun BiometricAuthenticationScreen() {
+    val context = LocalContext.current
+    val biometricManager = remember { BiometricManager.from(context) }
+    val canAuthenticate by remember { mutableStateOf(biometricManager.canAuthenticate() == BiometricManager.BIOMETRIC_SUCCESS) }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    JetpackTheme {
-        Greeting("Android")
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        if (canAuthenticate) {
+            BiometricAuthenticationButton()
+        } else {
+            Text(text = "Biometric authentication is not available on this device.")
+        }
     }
+}
+
+@Composable
+fun BiometricAuthenticationButton() {
+    val context = LocalContext.current as FragmentActivity
+    var authenticationResult by remember { mutableStateOf("") }
+
+    Button(
+        onClick = {
+            val biometricPrompt = BiometricPrompt(context, ContextCompat.getMainExecutor(context),
+                object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        super.onAuthenticationSucceeded(result)
+                        authenticationResult = "Authentication succeeded"
+                    }
+
+                    override fun onAuthenticationFailed() {
+                        super.onAuthenticationFailed()
+                        authenticationResult = "Authentication failed"
+                    }
+                })
+
+            val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Biometric Authentication")
+                .setSubtitle("Please authenticate to continue")
+                .setDeviceCredentialAllowed(true)
+                .build()
+
+            biometricPrompt.authenticate(promptInfo)
+        },
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Text(text = "Authenticate with Biometrics")
+    }
+
+    Text(text = authenticationResult, modifier = Modifier.padding(16.dp))
 }
